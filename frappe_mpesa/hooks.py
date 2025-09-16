@@ -28,6 +28,36 @@ app_license = "mit"
 # app_include_css = "/assets/frappe_mpesa/css/frappe_mpesa.css"
 # app_include_js = "/assets/frappe_mpesa/js/frappe_mpesa.js"
 
+# include js in doctype views
+doctype_js = {
+	"Sales Invoice": "public/js/sales_invoice.js"
+}
+# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+# doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
+# doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+
+# API endpoints for webhooks
+# ---------------------------
+# These endpoints are called by Mpesa servers for callbacks
+
+# STK Push callback endpoint
+# POST /api/method/frappe_mpesa.api.webhook_handlers.mpesa_express_callback
+
+# STK Push timeout endpoint  
+# POST /api/method/frappe_mpesa.api.webhook_handlers.mpesa_timeout_callback
+
+# C2B validation endpoint
+# POST /api/method/frappe_mpesa.api.webhook_handlers.c2b_validation
+
+# C2B confirmation endpoint
+# POST /api/method/frappe_mpesa.api.webhook_handlers.c2b_confirmation
+
+# B2C result endpoint
+# POST /api/method/frappe_mpesa.api.webhook_handlers.b2c_result_callback
+
+# B2C timeout endpoint
+# POST /api/method/frappe_mpesa.api.webhook_handlers.b2c_timeout_callback
+
 # include js, css files in header of web template
 # web_include_css = "/assets/frappe_mpesa/css/frappe_mpesa.css"
 # web_include_js = "/assets/frappe_mpesa/js/frappe_mpesa.js"
@@ -148,23 +178,15 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"frappe_mpesa.tasks.all"
-# 	],
-# 	"daily": [
-# 		"frappe_mpesa.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"frappe_mpesa.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"frappe_mpesa.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"frappe_mpesa.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"hourly": [
+		"frappe_mpesa.tasks.monitor_auth_health",
+		"frappe_mpesa.tasks.refresh_token_if_needed"
+	],
+	"daily": [
+		"frappe_mpesa.tasks.cleanup_auth_logs"
+	]
+}
 
 # Testing
 # -------

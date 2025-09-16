@@ -1,0 +1,30 @@
+{
+ "chart_name": "Mpesa Transaction Trends",
+ "chart_type": "Line",
+ "creation": "2025-09-16 14:00:00.000000",
+ "custom_options": "{\"colors\": [\"#28a745\", \"#ffc107\", \"#dc3545\"]}",
+ "doctype": "Dashboard Chart",
+ "document_type": "Mpesa Express Transaction",
+ "filters_json": "[]",
+ "group_by_based_on": "created_at",
+ "group_by_type": "Sum",
+ "is_public": 1,
+ "is_standard": 1,
+ "modified": "2025-09-16 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Frappe Mpesa",
+ "name": "Mpesa Transaction Trends",
+ "number_of_groups": 3,
+ "owner": "Administrator",
+ "report_name": "",
+ "time_interval": "Daily",
+ "timeseries": 1,
+ "type": "Count",
+ "use_report_chart": 0,
+ "value_based_on": "amount",
+ "y_axis": [
+  {
+   "y_field": "amount"
+  }
+ ]
+}

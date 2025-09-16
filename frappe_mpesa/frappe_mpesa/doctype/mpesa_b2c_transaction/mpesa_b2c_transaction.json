@@ -1,0 +1,290 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-16 13:00:00.000000",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "transaction_details_section",
+  "transaction_id",
+  "originator_conversation_id",
+  "conversation_id",
+  "column_break_transaction",
+  "amount",
+  "phone_number",
+  "command_id",
+  "recipient_details_section",
+  "recipient_name",
+  "recipient_type",
+  "column_break_recipient",
+  "reference_doctype",
+  "reference_name",
+  "processing_section",
+  "status",
+  "initiated_at",
+  "completed_at",
+  "column_break_processing",
+  "mpesa_receipt_number",
+  "transaction_receipt",
+  "result_section",
+  "result_type",
+  "result_code",
+  "result_desc",
+  "column_break_result",
+  "transaction_amount",
+  "transaction_completed_date",
+  "receiver_party_public_name",
+  "additional_info_section",
+  "remarks",
+  "occasion",
+  "column_break_additional",
+  "raw_response_data",
+  "callback_response"
+ ],
+ "fields": [
+  {
+   "fieldname": "transaction_details_section",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "transaction_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Transaction ID",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "originator_conversation_id",
+   "fieldtype": "Data",
+   "label": "Originator Conversation ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "conversation_id",
+   "fieldtype": "Data",
+   "label": "Conversation ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_transaction",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "phone_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Phone Number",
+   "reqd": 1
+  },
+  {
+   "default": "BusinessPayment",
+   "fieldname": "command_id",
+   "fieldtype": "Select",
+   "label": "Command ID",
+   "options": "BusinessPayment\nSalaryPayment\nPromotionPayment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "recipient_details_section",
+   "fieldtype": "Section Break",
+   "label": "Recipient Details"
+  },
+  {
+   "fieldname": "recipient_name",
+   "fieldtype": "Data",
+   "label": "Recipient Name"
+  },
+  {
+   "fieldname": "recipient_type",
+   "fieldtype": "Select",
+   "label": "Recipient Type",
+   "options": "Supplier\nEmployee\nCustomer\nOther"
+  },
+  {
+   "fieldname": "column_break_recipient",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Name",
+   "options": "reference_doctype"
+  },
+  {
+   "fieldname": "processing_section",
+   "fieldtype": "Section Break",
+   "label": "Processing Status"
+  },
+  {
+   "default": "Initiated",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Initiated\nPending\nCompleted\nFailed\nTimeout",
+   "reqd": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "initiated_at",
+   "fieldtype": "Datetime",
+   "label": "Initiated At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_processing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mpesa_receipt_number",
+   "fieldtype": "Data",
+   "label": "Mpesa Receipt Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transaction_receipt",
+   "fieldtype": "Data",
+   "label": "Transaction Receipt",
+   "read_only": 1
+  },
+  {
+   "fieldname": "result_section",
+   "fieldtype": "Section Break",
+   "label": "Result Details"
+  },
+  {
+   "fieldname": "result_type",
+   "fieldtype": "Data",
+   "label": "Result Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "result_code",
+   "fieldtype": "Data",
+   "label": "Result Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "result_desc",
+   "fieldtype": "Small Text",
+   "label": "Result Description",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_result",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transaction_amount",
+   "fieldtype": "Currency",
+   "label": "Transaction Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transaction_completed_date",
+   "fieldtype": "Date",
+   "label": "Transaction Completed Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receiver_party_public_name",
+   "fieldtype": "Data",
+   "label": "Receiver Party Public Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "additional_info_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "occasion",
+   "fieldtype": "Data",
+   "label": "Occasion"
+  },
+  {
+   "fieldname": "column_break_additional",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "raw_response_data",
+   "fieldtype": "Long Text",
+   "label": "Raw Response Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "callback_response",
+   "fieldtype": "Long Text",
+   "label": "Callback Response",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-09-16 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Frappe Mpesa",
+ "name": "Mpesa B2C Transaction",
+ "naming_rule": "By fieldname",
+ "naming_field": "transaction_id",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

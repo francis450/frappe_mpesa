@@ -1,0 +1,269 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-16 10:00:00.000000",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "environment_section",
+  "environment",
+  "column_break_environment",
+  "is_enabled",
+  "api_credentials_section",
+  "consumer_key",
+  "consumer_secret",
+  "passkey",
+  "column_break_credentials",
+  "shortcode",
+  "initiator_name",
+  "security_credential",
+  "api_endpoints_section",
+  "base_url",
+  "oauth_url",
+  "express_url",
+  "c2b_register_url",
+  "c2b_simulate_url",
+  "b2c_url",
+  "transaction_status_url",
+  "column_break_endpoints",
+  "callback_urls_section",
+  "validation_url",
+  "confirmation_url",
+  "result_url",
+  "timeout_url",
+  "column_break_callbacks",
+  "queue_timeout_url",
+  "business_config_section",
+  "till_number",
+  "paybill_number",
+  "column_break_business",
+  "default_account_head",
+  "expense_account_head"
+ ],
+ "fields": [
+  {
+   "fieldname": "environment_section",
+   "fieldtype": "Section Break",
+   "label": "Environment Settings"
+  },
+  {
+   "default": "Sandbox",
+   "fieldname": "environment",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Environment",
+   "options": "Sandbox\nProduction"
+  },
+  {
+   "fieldname": "column_break_environment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "is_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Mpesa Integration"
+  },
+  {
+   "fieldname": "api_credentials_section",
+   "fieldtype": "Section Break",
+   "label": "API Credentials"
+  },
+  {
+   "fieldname": "consumer_key",
+   "fieldtype": "Data",
+   "label": "Consumer Key"
+  },
+  {
+   "fieldname": "consumer_secret",
+   "fieldtype": "Password",
+   "label": "Consumer Secret"
+  },
+  {
+   "fieldname": "passkey",
+   "fieldtype": "Password",
+   "label": "Passkey (LNM Online)"
+  },
+  {
+   "fieldname": "column_break_credentials",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "shortcode",
+   "fieldtype": "Data",
+   "label": "Business Short Code"
+  },
+  {
+   "description": "Username for B2C transactions",
+   "fieldname": "initiator_name",
+   "fieldtype": "Data",
+   "label": "Initiator Name"
+  },
+  {
+   "description": "Security credential for B2C transactions",
+   "fieldname": "security_credential",
+   "fieldtype": "Password",
+   "label": "Security Credential"
+  },
+  {
+   "fieldname": "api_endpoints_section",
+   "fieldtype": "Section Break",
+   "label": "API Endpoints"
+  },
+  {
+   "default": "https://sandbox.safaricom.co.ke",
+   "fieldname": "base_url",
+   "fieldtype": "Data",
+   "label": "Base URL"
+  },
+  {
+   "default": "/oauth/v1/generate?grant_type=client_credentials",
+   "fieldname": "oauth_url",
+   "fieldtype": "Data",
+   "label": "OAuth URL"
+  },
+  {
+   "default": "/mpesa/stkpush/v1/processrequest",
+   "fieldname": "express_url",
+   "fieldtype": "Data",
+   "label": "Mpesa Express URL"
+  },
+  {
+   "default": "/mpesa/c2b/v1/registerurl",
+   "fieldname": "c2b_register_url",
+   "fieldtype": "Data",
+   "label": "C2B Register URL"
+  },
+  {
+   "default": "/mpesa/c2b/v1/simulate",
+   "fieldname": "c2b_simulate_url",
+   "fieldtype": "Data",
+   "label": "C2B Simulate URL"
+  },
+  {
+   "default": "/mpesa/b2c/v1/paymentrequest",
+   "fieldname": "b2c_url",
+   "fieldtype": "Data",
+   "label": "B2C Payment URL"
+  },
+  {
+   "default": "/mpesa/transactionstatus/v1/query",
+   "fieldname": "transaction_status_url",
+   "fieldtype": "Data",
+   "label": "Transaction Status URL"
+  },
+  {
+   "fieldname": "column_break_endpoints",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "callback_urls_section",
+   "fieldtype": "Section Break",
+   "label": "Callback URLs"
+  },
+  {
+   "description": "URL for C2B validation callback",
+   "fieldname": "validation_url",
+   "fieldtype": "Data",
+   "label": "Validation URL"
+  },
+  {
+   "description": "URL for C2B confirmation callback",
+   "fieldname": "confirmation_url",
+   "fieldtype": "Data",
+   "label": "Confirmation URL"
+  },
+  {
+   "description": "URL for B2C and Transaction Status result callback",
+   "fieldname": "result_url",
+   "fieldtype": "Data",
+   "label": "Result URL"
+  },
+  {
+   "description": "URL for timeout callback",
+   "fieldname": "timeout_url",
+   "fieldtype": "Data",
+   "label": "Timeout URL"
+  },
+  {
+   "fieldname": "column_break_callbacks",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "URL for queue timeout callback",
+   "fieldname": "queue_timeout_url",
+   "fieldtype": "Data",
+   "label": "Queue Timeout URL"
+  },
+  {
+   "fieldname": "business_config_section",
+   "fieldtype": "Section Break",
+   "label": "Business Configuration"
+  },
+  {
+   "description": "Your business Till Number for C2B payments",
+   "fieldname": "till_number",
+   "fieldtype": "Data",
+   "label": "Till Number"
+  },
+  {
+   "description": "Your business Paybill Number for C2B payments",
+   "fieldname": "paybill_number",
+   "fieldtype": "Data",
+   "label": "Paybill Number"
+  },
+  {
+   "fieldname": "column_break_business",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Default account head for Mpesa receipts",
+   "fieldname": "default_account_head",
+   "fieldtype": "Link",
+   "label": "Default Account Head",
+   "options": "Account"
+  },
+  {
+   "description": "Account head for B2C payment expenses",
+   "fieldname": "expense_account_head",
+   "fieldtype": "Link",
+   "label": "Expense Account Head",
+   "options": "Account"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-09-16 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Frappe Mpesa",
+ "name": "Mpesa Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
