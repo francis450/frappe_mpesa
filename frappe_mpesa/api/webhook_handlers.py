@@ -6,9 +6,135 @@ from frappe import _
 import json
 from frappe.utils import now, flt, cstr
 from frappe_mpesa.utils import sanitize_callback_data, get_error_message
+from frappe_mpesa.utils.resilience import with_retry, ExponentialBackoff
+import functools
+
+
+def resilient_webhook_handler(webhook_name: str, max_retries: int = 2):
+	"""Decorator for webhook handlers to add resilience and error recovery"""
+	def decorator(func):
+		@functools.wraps(func)
+		def wrapper(*args, **kwargs):
+			callback_data = None
+			transaction_id = None
+
+			try:
+				# Extract callback data for logging
+				callback_data = frappe.local.form_dict or {}
+				if not callback_data:
+					try:
+						callback_data = json.loads(frappe.request.get_data().decode('utf-8'))
+					except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+						callback_data = {}
+
+				# Extract transaction identifier for tracking
+				if webhook_name == "mpesa_express":
+					stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
+					transaction_id = stk_callback.get('CheckoutRequestID')
+				elif webhook_name == "c2b":
+					transaction_id = callback_data.get('TransID')
+				elif webhook_name == "b2c":
+					result = callback_data.get('Result', {})
+					transaction_id = result.get('OriginatorConversationID') or result.get('ConversationID')
+
+				# Log incoming webhook
+				frappe.log_error(
+					f"{webhook_name.upper()} Webhook received: {json.dumps(callback_data, indent=2)}",
+					f"Mpesa {webhook_name.upper()} Webhook"
+				)
+
+				# Execute the actual webhook handler
+				result = func(*args, **kwargs)
+
+				# Log successful processing
+				frappe.logger().info(
+					f"{webhook_name.upper()} webhook processed successfully. "
+					f"Transaction ID: {transaction_id or 'Unknown'}"
+				)
+
+				return result
+
+			except frappe.ValidationError as e:
+				# Business logic validation errors - should not be retried
+				error_msg = f"Validation error in {webhook_name} webhook: {str(e)}"
+				frappe.log_error(error_msg, f"Mpesa {webhook_name.upper()} Validation Error")
+
+				return {
+					"status": "error",
+					"message": "Validation failed",
+					"error_code": "VALIDATION_ERROR"
+				}
+
+			except frappe.DoesNotExistError as e:
+				# Record not found - log but don't fail the webhook
+				error_msg = f"Record not found in {webhook_name} webhook: {str(e)}"
+				frappe.log_error(error_msg, f"Mpesa {webhook_name.upper()} Record Not Found")
+
+				return {
+					"status": "success",
+					"message": "Record not found but webhook acknowledged",
+					"warning": "RECORD_NOT_FOUND"
+				}
+
+			except frappe.DuplicateEntryError as e:
+				# Duplicate processing - this is actually success (idempotency)
+				frappe.logger().info(
+					f"Duplicate {webhook_name} webhook processed: {str(e)}. "
+					f"Transaction ID: {transaction_id or 'Unknown'}"
+				)
+
+				return {
+					"status": "success",
+					"message": "Duplicate webhook processed (idempotent)",
+					"warning": "DUPLICATE_PROCESSED"
+				}
+
+			except Exception as e:
+				# Unexpected errors - these might be retryable
+				error_msg = f"Error processing {webhook_name} webhook: {str(e)}"
+				frappe.log_error(
+					f"{error_msg}\nCallback data: {json.dumps(callback_data, indent=2)}",
+					f"Mpesa {webhook_name.upper()} Processing Error"
+				)
+
+				# For critical webhooks, we might want to queue for retry
+				if webhook_name in ["mpesa_express", "b2c"]:
+					_queue_webhook_for_retry(webhook_name, callback_data, str(e))
+
+				return {
+					"status": "error",
+					"message": "Processing failed",
+					"error_code": "PROCESSING_ERROR"
+				}
+
+		return wrapper
+	return decorator
+
+
+def _queue_webhook_for_retry(webhook_name: str, callback_data: dict, error_message: str):
+	"""Queue failed webhook for retry processing"""
+	try:
+		# Create a failed webhook entry for manual retry or scheduled retry
+		failed_webhook = frappe.new_doc("Mpesa Failed Webhook")
+		failed_webhook.webhook_type = webhook_name
+		failed_webhook.callback_data = json.dumps(callback_data)
+		failed_webhook.error_message = error_message
+		failed_webhook.retry_count = 0
+		failed_webhook.status = "Pending Retry"
+		failed_webhook.save(ignore_permissions=True)
+		frappe.db.commit()
+
+		frappe.logger().info(f"Queued {webhook_name} webhook for retry: {failed_webhook.name}")
+
+	except Exception as e:
+		frappe.log_error(
+			f"Failed to queue webhook for retry: {str(e)}",
+			"Webhook Retry Queue Error"
+		)
 
 
 @frappe.whitelist(allow_guest=True)
+@resilient_webhook_handler("mpesa_express")
 def mpesa_express_callback():
 	"""Handle STK Push callback from Mpesa"""
 	try:
@@ -154,6 +280,7 @@ def create_payment_entry(transaction):
 
 
 @frappe.whitelist(allow_guest=True)
+@resilient_webhook_handler("mpesa_timeout")
 def mpesa_timeout_callback():
 	"""Handle STK Push timeout callback"""
 	try:
@@ -188,6 +315,7 @@ def mpesa_timeout_callback():
 
 
 @frappe.whitelist(allow_guest=True)
+@resilient_webhook_handler("c2b_validation")
 def c2b_validation():
 	"""Handle C2B validation callback from Mpesa"""
 	try:
@@ -234,6 +362,7 @@ def c2b_validation():
 
 
 @frappe.whitelist(allow_guest=True)
+@resilient_webhook_handler("c2b_confirmation")
 def c2b_confirmation():
 	"""Handle C2B confirmation callback from Mpesa"""
 	try:
@@ -305,6 +434,7 @@ def c2b_confirmation():
 
 
 @frappe.whitelist(allow_guest=True)
+@resilient_webhook_handler("b2c_result")
 def b2c_result_callback():
 	"""Handle B2C result callback from Mpesa"""
 	try:
@@ -352,6 +482,7 @@ def b2c_result_callback():
 
 
 @frappe.whitelist(allow_guest=True)
+@resilient_webhook_handler("b2c_timeout")
 def b2c_timeout_callback():
 	"""Handle B2C timeout callback from Mpesa"""
 	try:

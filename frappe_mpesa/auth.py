@@ -9,6 +9,13 @@ import json
 from datetime import datetime, timedelta
 from frappe.utils import now_datetime, get_datetime
 from frappe_mpesa.utils import get_mpesa_settings
+from frappe_mpesa.utils.resilience import (
+	get_resilient_requester,
+	ExponentialBackoff,
+	RetryableError,
+	NonRetryableError,
+	with_retry
+)
 
 
 class MpesaAuth:
@@ -18,6 +25,7 @@ class MpesaAuth:
 		self.settings = get_mpesa_settings()
 		self.cache_key = "mpesa_access_token"
 		self.token_expiry_buffer = 300  # 5 minutes buffer before token expires
+		self.resilient_requester = get_resilient_requester("mpesa_auth")
 		
 	def get_access_token(self, force_refresh=False):
 		"""Get valid access token with automatic refresh"""
@@ -55,70 +63,79 @@ class MpesaAuth:
 		return None
 	
 	def _request_new_token(self):
-		"""Request new access token from Safaricom API"""
+		"""Request new access token from Safaricom API with resilience"""
 		if not self.settings.consumer_key or not self.settings.consumer_secret:
 			frappe.throw(_("Consumer Key and Consumer Secret are required for authentication"))
-			
+
 		# Create basic auth header
 		auth_string = f"{self.settings.consumer_key}:{self.settings.get_password('consumer_secret')}"
 		auth_bytes = auth_string.encode('ascii')
 		auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
-		
+
 		headers = {
 			'Authorization': f'Basic {auth_b64}',
 			'Content-Type': 'application/json'
 		}
-		
+
 		url = self.settings.get_full_url(self.settings.oauth_url)
-		
+
 		try:
-			response = requests.get(url, headers=headers, timeout=30)
-			response.raise_for_status()
-			
+			# Use resilient requester for authentication
+			response = self.resilient_requester.request('GET', url, headers=headers)
+
 			result = response.json()
 			access_token = result.get('access_token')
 			expires_in = result.get('expires_in', 3600)  # Default to 1 hour
-			
+
 			if not access_token:
-				frappe.throw(_("No access token received from Mpesa API"))
-				
+				error_msg = _("No access token received from Mpesa API")
+				frappe.log_error(f"Invalid auth response: {result}", "Mpesa Auth Error")
+				raise NonRetryableError(error_msg)
+
 			# Cache the token
 			self._cache_token(access_token, expires_in)
-			
+
 			frappe.logger().info("Successfully obtained new Mpesa access token")
 			return access_token
-			
-		except requests.exceptions.Timeout:
-			error_msg = _("Timeout while requesting access token from Mpesa API")
-			frappe.log_error(error_msg, "Mpesa Auth Timeout")
-			frappe.throw(error_msg)
-			
-		except requests.exceptions.ConnectionError:
-			error_msg = _("Failed to connect to Mpesa authentication server")
-			frappe.log_error(error_msg, "Mpesa Auth Connection Error")
-			frappe.throw(error_msg)
-			
+
+		except (RetryableError, NonRetryableError):
+			# Re-raise our custom exceptions
+			raise
+
 		except requests.exceptions.HTTPError as e:
 			try:
-				error_response = e.response.json()
-				error_code = error_response.get('error', 'unknown_error')
-				error_description = error_response.get('error_description', str(e))
-				error_msg = _("Authentication failed: {0} - {1}").format(error_code, error_description)
+				if e.response:
+					error_response = e.response.json()
+					error_code = error_response.get('error', 'unknown_error')
+					error_description = error_response.get('error_description', str(e))
+					error_msg = _("Authentication failed: {0} - {1}").format(error_code, error_description)
+
+					# Check if it's a client error (4xx) - these should not be retried
+					if 400 <= e.response.status_code < 500:
+						frappe.log_error(f"Mpesa Auth Client Error: {error_msg}", "Mpesa Auth Error")
+						raise NonRetryableError(error_msg) from e
+				else:
+					error_msg = _("HTTP Error: {0}").format(str(e))
+
 			except (json.JSONDecodeError, AttributeError):
-				error_msg = _("HTTP Error {0}: {1}").format(e.response.status_code, e.response.text)
-				
+				error_msg = _("HTTP Error {0}: {1}").format(
+					e.response.status_code if e.response else "Unknown",
+					e.response.text if e.response else str(e)
+				)
+
 			frappe.log_error(f"Mpesa Auth HTTP Error: {error_msg}", "Mpesa Auth Error")
-			frappe.throw(error_msg)
-			
-		except json.JSONDecodeError:
+			raise RetryableError(error_msg) from e
+
+		except json.JSONDecodeError as e:
 			error_msg = _("Invalid JSON response from Mpesa authentication server")
-			frappe.log_error(error_msg, "Mpesa Auth JSON Error")
-			frappe.throw(error_msg)
-			
+			frappe.log_error(f"Mpesa Auth JSON Error: {error_msg}", "Mpesa Auth JSON Error")
+			raise NonRetryableError(error_msg) from e
+
 		except Exception as e:
 			error_msg = _("Unexpected authentication error: {0}").format(str(e))
 			frappe.log_error(f"Mpesa Auth Unexpected Error: {error_msg}", "Mpesa Auth Error")
-			frappe.throw(error_msg)
+			# Treat unexpected errors as retryable
+			raise RetryableError(error_msg) from e
 	
 	def _cache_token(self, access_token, expires_in):
 		"""Cache the access token with expiry"""

@@ -4,6 +4,12 @@ import requests
 import json
 from frappe_mpesa.utils import get_mpesa_settings, log_mpesa_transaction
 from frappe_mpesa.auth import get_mpesa_auth
+from frappe_mpesa.utils.resilience import (
+	get_resilient_requester,
+	RetryableError,
+	NonRetryableError,
+	CircuitBreakerError
+)
 
 
 class MpesaAPIBase:
@@ -12,57 +18,89 @@ class MpesaAPIBase:
 	def __init__(self):
 		self.settings = get_mpesa_settings()
 		self.auth = get_mpesa_auth()
+		self.resilient_requester = get_resilient_requester("mpesa_api")
 		
 	def make_request(self, endpoint, data=None, method="POST", log_transaction=True, retry_auth=True):
-		"""Make HTTP request to Mpesa API with automatic token refresh"""
+		"""Make HTTP request to Mpesa API with resilience and automatic token refresh"""
 		if not self.settings.is_enabled:
 			frappe.throw(_("Mpesa integration is not enabled"))
-			
+
 		url = self.settings.get_full_url(endpoint)
-		
-		try:
+
+		def _perform_request():
+			"""Internal function to perform the actual request"""
 			headers = self.auth.get_auth_headers()
-			
+
+			# Prepare request arguments based on method
 			if method.upper() == "POST":
-				response = requests.post(url, json=data, headers=headers, timeout=30)
+				kwargs = {"json": data} if data else {}
 			elif method.upper() == "GET":
-				response = requests.get(url, headers=headers, timeout=30)
+				kwargs = {"params": data} if data else {}
 			else:
-				frappe.throw(_("Unsupported HTTP method: {0}").format(method))
-				
-			# Handle 401 Unauthorized - try refreshing token once
-			if response.status_code == 401 and retry_auth:
-				frappe.logger().info("Received 401, attempting token refresh")
-				self.auth.invalidate_token()
-				return self.make_request(endpoint, data, method, log_transaction, retry_auth=False)
-				
-			response.raise_for_status()
-			result = response.json()
-			
+				raise NonRetryableError(_("Unsupported HTTP method: {0}").format(method))
+
+			kwargs["headers"] = headers
+
+			try:
+				response = self.resilient_requester.request(method, url, **kwargs)
+				return response
+
+			except requests.exceptions.HTTPError as e:
+				# Handle 401 Unauthorized - invalidate token and raise retryable error for auth retry
+				if e.response and e.response.status_code == 401:
+					frappe.logger().info("Received 401, invalidating token for retry")
+					self.auth.invalidate_token()
+
+					# If this is our first auth retry attempt, make it retryable
+					if retry_auth:
+						raise RetryableError(f"Authentication failed, token invalidated: {str(e)}") from e
+					else:
+						raise NonRetryableError(f"Authentication failed after token refresh: {str(e)}") from e
+
+				# For other HTTP errors, let the resilient requester handle retry logic
+				raise
+
+		try:
+			# Perform the resilient request
+			response = _perform_request()
+
+			# Parse JSON response
+			try:
+				result = response.json()
+			except json.JSONDecodeError as e:
+				error_msg = _("Invalid JSON response from Mpesa API")
+				frappe.log_error(f"JSON decode error: {str(e)}", "Mpesa API JSON Error")
+				raise NonRetryableError(error_msg) from e
+
+			# Log successful transaction
 			if log_transaction:
 				log_mpesa_transaction(
 					transaction_type=endpoint,
 					request_data=data,
 					response_data=result,
-					status="Success" if response.status_code == 200 else "Failed"
+					status="Success"
 				)
-				
+
 			return result
-			
-		except requests.exceptions.Timeout:
-			error_msg = _("Request timeout while connecting to Mpesa API")
-			frappe.log_error(error_msg, "Mpesa API Timeout")
+
+		except CircuitBreakerError as e:
+			error_msg = _("Mpesa API circuit breaker is open: {0}").format(str(e))
+			frappe.log_error(error_msg, "Mpesa API Circuit Breaker")
+
+			if log_transaction:
+				log_mpesa_transaction(
+					transaction_type=endpoint,
+					request_data=data,
+					response_data={"error": error_msg, "circuit_breaker": "open"},
+					status="Circuit Breaker Open"
+				)
+
 			frappe.throw(error_msg)
-			
-		except requests.exceptions.ConnectionError:
-			error_msg = _("Failed to connect to Mpesa API")
-			frappe.log_error(error_msg, "Mpesa API Connection Error")
-			frappe.throw(error_msg)
-			
-		except requests.exceptions.HTTPError as e:
-			error_msg = _("HTTP Error {0}: {1}").format(e.response.status_code, e.response.text)
-			frappe.log_error(f"Mpesa API HTTP Error: {error_msg}", "Mpesa API Error")
-			
+
+		except (RetryableError, NonRetryableError) as e:
+			error_msg = _("Mpesa API request failed: {0}").format(str(e))
+			frappe.log_error(f"Mpesa API Error: {error_msg}", "Mpesa API Error")
+
 			if log_transaction:
 				log_mpesa_transaction(
 					transaction_type=endpoint,
@@ -70,18 +108,13 @@ class MpesaAPIBase:
 					response_data={"error": error_msg},
 					status="Failed"
 				)
-				
+
 			frappe.throw(error_msg)
-			
-		except json.JSONDecodeError:
-			error_msg = _("Invalid JSON response from Mpesa API")
-			frappe.log_error(error_msg, "Mpesa API JSON Error")
-			frappe.throw(error_msg)
-			
+
 		except Exception as e:
-			error_msg = _("Unexpected error: {0}").format(str(e))
+			error_msg = _("Unexpected error in Mpesa API request: {0}").format(str(e))
 			frappe.log_error(f"Mpesa API Unexpected Error: {error_msg}", "Mpesa API Error")
-			
+
 			if log_transaction:
 				log_mpesa_transaction(
 					transaction_type=endpoint,
@@ -89,7 +122,7 @@ class MpesaAPIBase:
 					response_data={"error": error_msg},
 					status="Failed"
 				)
-				
+
 			frappe.throw(error_msg)
 	
 	def validate_response(self, response, required_fields=None):

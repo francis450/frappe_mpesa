@@ -35,6 +35,17 @@
   "timeout_url",
   "column_break_callbacks",
   "queue_timeout_url",
+  "resilience_settings_section",
+  "max_retries",
+  "connect_timeout",
+  "read_timeout",
+  "total_timeout",
+  "column_break_resilience",
+  "circuit_breaker_failure_threshold",
+  "circuit_breaker_recovery_timeout",
+  "enable_exponential_backoff",
+  "initial_backoff_delay",
+  "max_backoff_delay",
   "business_config_section",
   "till_number",
   "paybill_number",
@@ -196,6 +207,84 @@
    "fieldname": "queue_timeout_url",
    "fieldtype": "Data",
    "label": "Queue Timeout URL"
+  },
+  {
+   "fieldname": "resilience_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Resilience & Timeout Settings"
+  },
+  {
+   "default": 3,
+   "description": "Maximum number of retries for failed API requests",
+   "fieldname": "max_retries",
+   "fieldtype": "Int",
+   "label": "Max Retries"
+  },
+  {
+   "default": 10.0,
+   "description": "Connection timeout in seconds",
+   "fieldname": "connect_timeout",
+   "fieldtype": "Float",
+   "label": "Connect Timeout (seconds)",
+   "precision": 1
+  },
+  {
+   "default": 30.0,
+   "description": "Read timeout in seconds",
+   "fieldname": "read_timeout",
+   "fieldtype": "Float",
+   "label": "Read Timeout (seconds)",
+   "precision": 1
+  },
+  {
+   "default": 60.0,
+   "description": "Total timeout for the entire request in seconds",
+   "fieldname": "total_timeout",
+   "fieldtype": "Float",
+   "label": "Total Timeout (seconds)",
+   "precision": 1
+  },
+  {
+   "fieldname": "column_break_resilience",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 5,
+   "description": "Number of failures before circuit breaker opens",
+   "fieldname": "circuit_breaker_failure_threshold",
+   "fieldtype": "Int",
+   "label": "Circuit Breaker Failure Threshold"
+  },
+  {
+   "default": 60.0,
+   "description": "Time in seconds before attempting to close circuit breaker",
+   "fieldname": "circuit_breaker_recovery_timeout",
+   "fieldtype": "Float",
+   "label": "Circuit Breaker Recovery Timeout (seconds)",
+   "precision": 1
+  },
+  {
+   "default": 1,
+   "description": "Enable exponential backoff for retries",
+   "fieldname": "enable_exponential_backoff",
+   "fieldtype": "Check",
+   "label": "Enable Exponential Backoff"
+  },
+  {
+   "default": 1.0,
+   "description": "Initial delay for exponential backoff in seconds",
+   "fieldname": "initial_backoff_delay",
+   "fieldtype": "Float",
+   "label": "Initial Backoff Delay (seconds)",
+   "precision": 1
+  },
+  {
+   "default": 30.0,
+   "description": "Maximum delay for exponential backoff in seconds",
+   "fieldname": "max_backoff_delay",
+   "fieldtype": "Float",
+   "label": "Max Backoff Delay (seconds)",
+   "precision": 1
   },
   {
    "fieldname": "business_config_section",

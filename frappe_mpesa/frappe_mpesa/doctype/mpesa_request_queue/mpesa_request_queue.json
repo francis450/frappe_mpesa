@@ -1,0 +1,223 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-09-22 10:00:00.000000",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "request_details_section",
+  "request_type",
+  "endpoint",
+  "method",
+  "column_break_request",
+  "priority",
+  "status",
+  "reference_section",
+  "reference_doctype",
+  "reference_name",
+  "column_break_reference",
+  "request_data",
+  "retry_details_section",
+  "retry_count",
+  "max_retries",
+  "next_retry_at",
+  "column_break_retry",
+  "last_retry_at",
+  "completed_at",
+  "failed_at",
+  "response_section",
+  "response_data",
+  "error_message"
+ ],
+ "fields": [
+  {
+   "default": "MRQ-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "MRQ-.YYYY.-.#####"
+  },
+  {
+   "fieldname": "request_details_section",
+   "fieldtype": "Section Break",
+   "label": "Request Details"
+  },
+  {
+   "fieldname": "request_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Request Type",
+   "options": "stk_push\nb2c_payment\nc2b_simulation\ntransaction_status\ntoken_refresh\nother",
+   "reqd": 1
+  },
+  {
+   "fieldname": "endpoint",
+   "fieldtype": "Data",
+   "label": "API Endpoint",
+   "reqd": 1
+  },
+  {
+   "default": "POST",
+   "fieldname": "method",
+   "fieldtype": "Select",
+   "label": "HTTP Method",
+   "options": "GET\nPOST\nPUT\nDELETE",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_request",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 2,
+   "description": "1=High, 2=Normal, 3=Low",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Priority",
+   "options": "1\n2\n3",
+   "reqd": 1
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Queued\nRetrying\nCompleted\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference Document"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Name",
+   "options": "reference_doctype"
+  },
+  {
+   "fieldname": "column_break_reference",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "request_data",
+   "fieldtype": "Long Text",
+   "label": "Request Data (JSON)"
+  },
+  {
+   "fieldname": "retry_details_section",
+   "fieldtype": "Section Break",
+   "label": "Retry Details"
+  },
+  {
+   "default": 0,
+   "fieldname": "retry_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Retry Count",
+   "read_only": 1
+  },
+  {
+   "default": 5,
+   "fieldname": "max_retries",
+   "fieldtype": "Int",
+   "label": "Max Retries"
+  },
+  {
+   "fieldname": "next_retry_at",
+   "fieldtype": "Datetime",
+   "label": "Next Retry At"
+  },
+  {
+   "fieldname": "column_break_retry",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_retry_at",
+   "fieldtype": "Datetime",
+   "label": "Last Retry At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "failed_at",
+   "fieldtype": "Datetime",
+   "label": "Failed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "response_section",
+   "fieldtype": "Section Break",
+   "label": "Response & Error Details"
+  },
+  {
+   "fieldname": "response_data",
+   "fieldtype": "Long Text",
+   "label": "Response Data (JSON)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-09-22 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Frappe Mpesa",
+ "name": "Mpesa Request Queue",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "request_type",
+ "track_changes": 1
+}
