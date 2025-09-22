@@ -179,12 +179,24 @@ doctype_js = {
 # ---------------
 
 scheduler_events = {
+	"cron": {
+		# Process request queue every 5 minutes
+		"*/5 * * * *": [
+			"frappe_mpesa.tasks.process_mpesa_request_queue"
+		],
+		# Retry failed requests every 30 minutes
+		"*/30 * * * *": [
+			"frappe_mpesa.tasks.retry_failed_mpesa_requests"
+		]
+	},
 	"hourly": [
 		"frappe_mpesa.tasks.monitor_auth_health",
-		"frappe_mpesa.tasks.refresh_token_if_needed"
+		"frappe_mpesa.tasks.refresh_token_if_needed",
+		"frappe_mpesa.tasks.monitor_mpesa_health"
 	],
 	"daily": [
-		"frappe_mpesa.tasks.cleanup_auth_logs"
+		"frappe_mpesa.tasks.cleanup_auth_logs",
+		"frappe_mpesa.tasks.cleanup_mpesa_queue"
 	]
 }
 
